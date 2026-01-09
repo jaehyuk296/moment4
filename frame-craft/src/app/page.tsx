@@ -7,7 +7,7 @@ export default function Home() {
       {/* 헤더 섹션 */}
       <div className="text-center mb-8 space-y-2">
         <h1 className="text-4xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-tight">
-          Frame Craft 📸
+          MOMENT4 📸
         </h1>
         <p className="text-white/80 text-lg font-medium">
           나만의 인생네컷을 만들어보세요!
@@ -20,7 +20,7 @@ export default function Home() {
       {/* 하단 버튼 (아직 기능 없음) */}
       <div className="mt-8 flex gap-4">
         <button className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
-          촬영하기 ✨
+          편집하기 ✨
         </button>
       </div>
     </main>
