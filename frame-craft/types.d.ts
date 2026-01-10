@@ -6,3 +6,8 @@ declare global {
     SelfieSegmentation: any;
   }
 }
+
+
+declare module '@imgly/background-removal' {
+  export function removeBackground(imageSource: string | Blob | File | HTMLImageElement): Promise<Blob>;
+}
