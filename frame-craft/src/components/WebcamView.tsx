@@ -4,8 +4,6 @@ import { useRef, useEffect, useState, useCallback } from "react";
 
 // 분리한 컴포넌트 불러오기
 import NeonDecorations from "./webcam/NeonDecorations";
-// SideTools는 이제 ControlBar 내부에서 쓰이므로 여기서 직접 import 안 해도 되지만,
-// 아래에서 지워야 하므로 확인용으로 남겨둡니다.
 import Viewfinder from "./webcam/Viewfinder";
 import PhotoStrip from "./webcam/PhotoStrip";
 import ControlBar from "./webcam/ControlBar";
@@ -32,7 +30,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
       .catch((err) => console.error("Camera Error:", err));
   }, []);
 
-  // 사진 촬영 로직
+  // 사진 촬영 로직 (필터 없이 깔끔하게)
   const captureOne = useCallback(() => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
@@ -86,10 +84,8 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
         MOMENT4
       </h1>
     
-      {/* 3. 메인 콘텐츠 (뷰파인더만 남김) */}
+      {/* 3. 메인 콘텐츠 (뷰파인더) */}
       <div className="relative flex items-center justify-center">
-        {/* [수정] SideTools 컴포넌트 삭제함 (ControlBar 안으로 이동) */}
-        
         <Viewfinder 
           videoRef={videoRef}
           isMirrored={isMirrored}
@@ -107,7 +103,6 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
           onDelete={deletePhoto} 
         />
         
-        {/* [수정] ControlBar에 사이드 툴 관련 props 추가 전달 */}
         <ControlBar 
           isComplete={photos.length === 4}
           isTimerOn={isTimerOn}
@@ -115,7 +110,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
           onShutter={handleShutter}
           onFinish={() => onFinish(photos)}
           isCountActive={count !== null}
-          // 추가된 props
+          // 사이드 툴 Props 전달
           isGridOn={isGridOn}
           setIsGridOn={setIsGridOn}
           isMirrored={isMirrored}

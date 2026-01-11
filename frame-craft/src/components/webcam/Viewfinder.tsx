@@ -1,4 +1,4 @@
-import { RefObject, MutableRefObject } from "react"; // MutableRefObject 추가
+import { RefObject, MutableRefObject } from "react";
 
 interface ViewfinderProps {
   videoRef: RefObject<HTMLVideoElement> | MutableRefObject<HTMLVideoElement | null>;
@@ -12,7 +12,6 @@ interface ViewfinderProps {
 export default function Viewfinder({ videoRef, isMirrored, isGridOn, count, isFlashing, isComplete }: ViewfinderProps) {
   return (
     <div className="relative border-4 border-white/50 rounded-xl overflow-hidden w-[640px] max-w-full shadow-2xl bg-black z-10">
-      {/* videoRef 타입이 호환되도록 ref 속성에 전달 */}
       <video 
         ref={videoRef as RefObject<HTMLVideoElement>} 
         autoPlay 

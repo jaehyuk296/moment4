@@ -1,4 +1,4 @@
-import SideTools from "./SideTools"; // SideTools 불러오기
+import SideTools from "./SideTools";
 
 interface ControlBarProps {
   isComplete: boolean;
@@ -8,7 +8,7 @@ interface ControlBarProps {
   onFinish: () => void;
   isCountActive: boolean;
   
-  // [추가] SideTools에 필요한 Props 전달받기
+  // SideTools props
   isGridOn: boolean;
   setIsGridOn: (v: boolean) => void;
   isMirrored: boolean;
@@ -20,9 +20,10 @@ export default function ControlBar({
   isGridOn, setIsGridOn, isMirrored, setIsMirrored 
 }: ControlBarProps) {
   return (
-    <div className="flex items-center justify-center bg-white/10 backdrop-blur-md p-4 rounded-full px-8 relative min-h-[88px] border border-black   /20">
+    <div className="flex items-center justify-center bg-white/10 backdrop-blur-md p-4 rounded-full px-8 relative min-h-[88px] border border-pink/20">
       {!isComplete ? (
         <div className="flex items-center gap-4 w-full justify-between">
+          
           {/* [왼쪽] 타이머 버튼 */}
           <div className="flex-1 flex justify-start">
             <button 
@@ -33,7 +34,7 @@ export default function ControlBar({
                   : "bg-transparent border-pink-400 text-black hover:bg-pink-500/10 hover:border-pink-300"
               }`}
             >
-              {isTimerOn ? "⏱️ 3 초" : "⏱️ OFF"}
+              {isTimerOn ? "⏱️ 3초" : "⏱️ OFF"}
             </button>
           </div>
 
@@ -48,7 +49,7 @@ export default function ControlBar({
             </button>
           </div>
 
-          {/* [오른쪽] 사이드 툴 (그리드, 거울) 배치 */}
+          {/* [오른쪽] 사이드 툴 */}
           <div className="flex-1 flex justify-end">
             <SideTools 
               isGridOn={isGridOn} setIsGridOn={setIsGridOn}
