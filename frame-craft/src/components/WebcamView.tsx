@@ -11,9 +11,9 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
   const [photos, setPhotos] = useState<string[]>([]);
   
   // 기능 상태 관리
-  const [count, setCount] = useState<number | null>(null); // 카운트다운 (null이면 대기)
-  const [isTimerOn, setIsTimerOn] = useState(false);       // 타이머 모드 켜기/끄기
-  const [isFlashing, setIsFlashing] = useState(false);     // 촬영 효과
+  const [count, setCount] = useState<number | null>(null);
+  const [isTimerOn, setIsTimerOn] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
 
   // 1. 카메라 시작
   useEffect(() => {
@@ -22,14 +22,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
       .catch((err) => console.error("Camera Error:", err));
   }, []);
 
-  // 2. 촬영 완료 체크 (4장 모이면 종료)
-  useEffect(() => {
-    if (photos.length === 4) {
-      setTimeout(() => onFinish(photos), 500); // 마지막 촬영 후 잠시 보여주고 넘어감
-    }
-  }, [photos, onFinish]);
-
-  // 3. 사진 1장 캡처 함수 (핵심)
+  // 2. 사진 1장 캡처 함수
   const captureOne = useCallback(() => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
@@ -44,104 +37,137 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
     
     const photoData = canvas.toDataURL("image/png");
     
-    // 플래시 & 저장
     setIsFlashing(true);
     setTimeout(() => setIsFlashing(false), 200);
     setPhotos((prev) => [...prev, photoData]);
-    setCount(null); // 카운트다운 종료 (다음 촬영 대기)
+    setCount(null);
   }, []);
 
-  // 4. 타이머 카운트다운 로직
+  // 3. 타이머 로직
   useEffect(() => {
     if (count === null) return;
-
     if (count > 0) {
       const timer = setTimeout(() => setCount(count - 1), 1000);
       return () => clearTimeout(timer);
     } else if (count === 0) {
-      captureOne(); // 0이 되면 촬영!
+      captureOne();
     }
   }, [count, captureOne]);
 
-  // 5. 셔터 버튼 핸들러
+  // 셔터 핸들러
   const handleShutter = () => {
     if (photos.length >= 4) return;
+    if (isTimerOn) setCount(3);
+    else captureOne();
+  };
 
-    if (isTimerOn) {
-      setCount(3); // 타이머 켜져있으면 3초 카운트 시작
-    } else {
-      captureOne(); // 꺼져있으면 즉시 촬영
-    }
+  // 개별 사진 삭제
+  const deletePhoto = (indexToRemove: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== indexToRemove));
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-gray-900 p-4">
+    // 화려한 배경 그라데이션 적용
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-purple-900 to-violet-950 p-4">
+      
+      {/* 상단 MOMENT4 타이틀 */}
+      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 mb-8 tracking-widest drop-shadow-sm">
+        MOMENT4
+      </h1>
+    
       {/* 뷰파인더 영역 */}
-      <div className="relative border-4 border-white rounded-xl overflow-hidden w-[640px] max-w-full shadow-2xl">
-        <video ref={videoRef} autoPlay playsInline className="w-full transform -scale-x-100 bg-black" />
+      <div className="relative border-4 border-white/50 rounded-xl overflow-hidden w-[640px] max-w-full shadow-2xl bg-black">
+        <video ref={videoRef} autoPlay playsInline className="w-full transform -scale-x-100" />
         
-        {/* 카운트다운 오버레이 */}
+        {/* 카운트다운 */}
         {count !== null && count > 0 && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-9xl font-bold animate-pulse">
             {count}
           </div>
         )}
         
-        {/* 촬영 플래시 */}
+        {/* 플래시 */}
         {isFlashing && <div className="absolute inset-0 bg-white transition-opacity duration-200" />}
+        
+        {/* 4장 완료 시 메시지 */}
+        {photos.length === 4 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 pointer-events-none backdrop-blur-sm">
+            <h2 className="text-white text-3xl font-bold drop-shadow-md animate-bounce mb-2">
+              ✨ 촬영 완료! ✨
+            </h2>
+            <p className="text-gray-200 text-sm bg-black/50 px-4 py-1 rounded-full">
+              맘에 안 드는 사진은 <span className="text-red-400 font-bold">X</span>를 눌러 다시 찍으세요
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 하단 컨트롤 영역 */}
-      <div className="w-full max-w-[640px] mt-6 flex flex-col gap-4">
+      <div className="w-full max-w-[640px] mt-8 flex flex-col gap-6">
         
-        {/* 찍은 사진 미리보기 리스트 */}
-        <div className="flex gap-2 justify-center h-24">
+        {/* 사진 미리보기 리스트 */}
+        <div className="flex gap-4 justify-center h-28">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className={`relative w-20 h-full border-2 rounded-md overflow-hidden bg-gray-800 ${photos[i] ? "border-green-400" : "border-gray-600"}`}>
+            <div key={i} className={`relative w-24 h-full border-2 rounded-lg overflow-hidden bg-white/10 backdrop-blur-md ${photos[i] ? "border-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "border-black/50 border-dashed"}`}>
               {photos[i] ? (
-                <img src={photos[i]} alt={`shot ${i}`} className="w-full h-full object-cover" />
+                <>
+                  {/* [변경점] 사진에 하얀색 테두리 추가 */}
+                  <img src={photos[i]} alt={`shot ${i}`} className="w-full h-full object-cover border-2 border-white/70" />
+                  
+                  <button   
+                    onClick={() => deletePhoto(i)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md transition-transform hover:scale-110 z-20"
+                  >
+                    ✕
+                  </button>
+                </>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 font-bold text-xl">{i + 1}</div>
+                <div className="flex items-center justify-center h-full text-white/50 font-bold text-xl">{i + 1}</div>
               )}
             </div>
           ))}
         </div>
 
-        {/* 조작 버튼들 */}
-        <div className="flex items-center justify-between bg-gray-800 p-4 rounded-full px-8">
+        {/* 조작 버튼 영역 */}
+        <div className="flex items-center justify-center bg-white/10 backdrop-blur-md p-4 rounded-full px-8 relative min-h-[88px] border border-black/20">
           
-          {/* 타이머 토글 버튼 */}
-          <button 
-            onClick={() => setIsTimerOn(!isTimerOn)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition ${
-              isTimerOn ? "bg-yellow-400 text-black" : "bg-gray-600 text-gray-300"
-            }`}
-          >
-            {isTimerOn ? "⏱️ 타이머 ON (3초)" : "⏱️ 타이머 OFF"}
-          </button>
+          {photos.length < 4 ? (
+            // [촬영 중]
+            <div className="flex items-center gap-8 w-full justify-between">
+              
+              {/* 타이머 버튼 디자인 수정 */}
+              <button 
+                onClick={() => setIsTimerOn(!isTimerOn)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition border-2 ${
+                  isTimerOn 
+                    ? "bg-pink-500 border-pink-500 text-white shadow-lg"  // 켜짐: 꽉 찬 핑크
+                    : "bg-transparent border-pink-400 text-black hover:bg-pink-500/10 hover:border-pink-300" // 꺼짐: 투명 + 핑크 테두리
+                }`}
+              >
+                {isTimerOn ? "⏱️ 3초" : "⏱️ OFF"}
+              </button>
 
-          {/* 셔터 버튼 */}
-          <button 
-            onClick={handleShutter}
-            disabled={count !== null} // 카운트다운 중엔 클릭 방지
-            className="w-20 h-20 bg-white rounded-full border-4 border-gray-300 shadow-lg hover:bg-gray-100 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="w-full h-full rounded-full border-2 border-black opacity-20"></div>
-          </button>
+              <button 
+                onClick={handleShutter}
+                disabled={count !== null} 
+                className="w-20 h-20 bg-white rounded-full border-4 border-pink-200 shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:bg-pink-50 active:scale-95 transition transform"
+              >
+                <div className="w-full h-full rounded-full border-2 border-pink-400 opacity-30"></div>
+              </button>
 
-          {/* 리셋 버튼 (선택 사항) */}
-          <button 
-            onClick={() => setPhotos([])}
-            className="text-white underline text-sm hover:text-gray-300"
-          >
-            초기화
-          </button>
+              <div className="w-24"></div> 
+            </div>
+          ) : (
+            // [4장 완료]
+            <button 
+              onClick={() => onFinish(photos)}
+              className="w-full py-4 bg-gradient-to-r from-pink-500 to-violet-500 text-white text-2xl font-bold rounded-full hover:from-pink-600 hover:to-violet-600 transition shadow-lg flex items-center justify-center gap-2 animate-pulse"
+            >
+              🎨 이대로 꾸미러 가기!
+            </button>
+          )}
         </div>
-
-        <p className="text-center text-gray-400 mt-2">
-          {4 - photos.length}장 남았습니다. {isTimerOn ? "셔터를 누르면 3초 뒤 찍힙니다." : "셔터를 누르면 바로 찍힙니다."}
-        </p>
-      </div>
+      </div>  
     </div>
   );
-}
+}   
