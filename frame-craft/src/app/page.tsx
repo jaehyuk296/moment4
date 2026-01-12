@@ -5,16 +5,22 @@ import WebcamView from "@/components/WebcamView";
 import PhotoEditor from "@/components/PhotoEditor";
 
 export default function Home() {
-  const [photos, setPhotos] = useState<string[]>([]); // 4장의 사진 배열
+  // 찍은 사진들을 저장하는 상태
+  const [photos, setPhotos] = useState<string[]>([]);
 
   return (
     <main>
       {photos.length < 4 ? (
-        // 4장이 안 모였으면 촬영 화면
-        <WebcamView onFinish={(takenPhotos) => setPhotos(takenPhotos)} />
+        // [1] 사진이 4장 미만이면 -> 촬영 화면 (WebcamView) 보여줌
+        <WebcamView 
+          onFinish={(takenPhotos) => setPhotos(takenPhotos)} 
+        />
       ) : (
-        // 4장이 모였으면 편집 화면
-        <PhotoEditor photos={photos} onRetake={() => setPhotos([])} />
+        // [2] 사진이 4장 다 찼으면 -> 편집 화면 (PhotoEditor) 보여줌
+        <PhotoEditor 
+          photos={photos} 
+          onBack={() => setPhotos([])} 
+        />
       )}
     </main>
   );
