@@ -46,6 +46,26 @@ export const THEMES = [
 
 // [업그레이드된 화풍 스타일 레시피]
 export const STYLE_FILTERS = [
+  // [New] ✨ 스케치북 (빈 화면) 스타일 추가 ✨
+  { 
+    id: 'sketchbook',
+    name: '📒 스케치북 (빈 화면)',
+    // bgColor 매개변수 추가 (현재 테마 색상을 받아옴)
+    apply: (img: fabric.Image, bgColor?: string) => {
+      // 배경색이 없으면 기본 흰색 사용
+      const colorToUse = bgColor || '#ffffff';
+
+      img.filters = [
+         // BlendColor 필터를 'tint' 모드, 투명도 1.0으로 설정하면
+         // 이미지가 해당 색상으로 완전히 덮입니다.
+         new fabric.Image.filters.BlendColor({
+            color: colorToUse,
+            mode: 'tint',
+            alpha: 1.0 
+         })
+      ];
+    }
+  },
   { 
     id: 'sketch', 
     name: '✏️ 스케치', 

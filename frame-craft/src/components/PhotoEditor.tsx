@@ -348,22 +348,31 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
   };
 
 
-  // [기능 3] AI 스타일 (기존 유지)
+  // [기능 3] AI 스타일 (스케치북 기능 추가됨)
   const handleApplyStyle = (styleId: string) => {
     const activeObj = fabricCanvas.current?.getActiveObject() as CustomFabricImage;
     if (!activeObj || activeObj.type !== 'image') {
       alert("효과를 적용할 사진을 선택해주세요!");
       return;
     }
+
+    // 1. 원본 복구
     if (styleId === 'original') {
       activeObj.filters = [];
       activeObj.applyFilters();
       fabricCanvas.current?.renderAll();
       return;
     }
+
+    // 2. 선택한 스타일 찾기 및 적용
     const selectedStyle = STYLE_FILTERS.find(s => s.id === styleId);
     if (selectedStyle) {
-      selectedStyle.apply(activeObj);
+      // [중요] 현재 테마의 배경색을 두 번째 인자로 전달합니다!
+      const currentThemeBgColor = THEMES[themeIndex].bg;
+      
+      // 스타일 적용 함수 호출 (배경색 전달)
+      selectedStyle.apply(activeObj, currentThemeBgColor);
+      
       activeObj.applyFilters();
       fabricCanvas.current?.renderAll();
     }
