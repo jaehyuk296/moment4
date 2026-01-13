@@ -34,6 +34,40 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
   const loadedImagesRef = useRef<(EnhancedFabricImage | null)[]>([null, null, null, null]);
   const titleObjectRef = useRef<fabric.Text | null>(null);
 
+  const handleAddText = ({ text, color, font }: { text: string, color: string, font: string }) => {
+    if (!fabricCanvas.current || !text.trim()) return;
+
+    // Fabric의 IText(Interactive Text) 객체 생성
+    // IText는 사용자가 더블 클릭해서 내용을 수정할 수도 있습니다.
+    const textTextbox = new fabric.IText(text, {
+      left: IMG_WIDTH / 2, // 대략 중앙 쯤에 배치
+      top: IMG_HEIGHT / 2,
+      fontFamily: font || 'Pretendard, sans-serif', // 기본 폰트 (프로젝트에 적용된 폰트 사용)
+      fill: color || '#000000',     // 기본 글자색 (검정)
+      fontSize: 40,        // 기본 글자 크기
+      fontWeight: 'bold',  // 약간 두껍게
+      // 그림자 효과로 가독성 높이기 (선택 사항)
+      shadow: new fabric.Shadow({
+        color: 'rgba(0,0,0,0.3)',
+        blur: 5,
+        offsetX: 2,
+        offsetY: 2
+      }),
+      // 객체 조작 제어판 설정 (기존 스티커와 동일하게)
+      borderColor: '#2563eb',
+      cornerColor: '#2563eb',
+      cornerSize: 12,
+      transparentCorners: false,
+    });
+
+    // 캔버스에 추가
+    fabricCanvas.current.add(textTextbox);
+    // 추가된 텍스트를 바로 선택 상태로 만듦 (바로 이동 가능하게)
+    fabricCanvas.current.setActiveObject(textTextbox);
+    // 캔버스 다시 그리기
+    fabricCanvas.current.requestRenderAll();
+  };
+
   useEffect(() => { layoutRef.current = layoutMode; }, [layoutMode]);
 
   // ==========================================
@@ -418,7 +452,7 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
         />
       </div>
 
-      <StickerSidebar isOpen={isStickerBarOpen} onAddSticker={addSticker} />
+      <StickerSidebar isOpen={isStickerBarOpen} onAddSticker={addSticker} onAddText={handleAddText}/>
     </div>
   );
 }

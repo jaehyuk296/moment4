@@ -1,30 +1,40 @@
 import { fabric } from "fabric";
 
-// 사진 크기 및 여백 설정
+// ==========================================
+// 1. 캔버스 및 레이아웃 설정 (상수 관리)
+// ==========================================
+// 사진 크기: 4:3 비율 유지 (인생네컷 표준)
 export const IMG_WIDTH = 400;
 export const IMG_HEIGHT = 300;
-export const HEADER_HEIGHT = 70;
-export const PADDING = 25;
-export const GAP = 15;
+export const HEADER_HEIGHT = 70; // 타이틀/날짜가 들어갈 상단 여백
+export const PADDING = 25;       // 프레임 테두리 여백
+export const GAP = 15;           // 사진 사이의 간격
 
-// 초기 위치 계산
+// 초기 드로잉 시작 좌표 (좌상단 기준)
 export const startX = PADDING;
 export const startY = PADDING + HEADER_HEIGHT;
 
-// 레이아웃 설정
+// ==========================================
+// 2. 레이아웃 좌표 계산 로직
+// ==========================================
 export const LAYOUTS = {
+  // [2x2 그리드 모드]
   grid: {
+    // 캔버스 전체 크기 자동 계산: (여백*2) + (사진너비*2) + 간격
     canvasWidth: PADDING * 2 + IMG_WIDTH * 2 + GAP,
     canvasHeight: PADDING * 2 + HEADER_HEIGHT + IMG_HEIGHT * 2 + GAP,
+    // 4장의 사진이 들어갈 (x, y) 좌표 배열
     positions: [
-      { left: startX, top: startY },
-      { left: startX + IMG_WIDTH + GAP, top: startY },
-      { left: startX, top: startY + IMG_HEIGHT + GAP },
-      { left: startX + IMG_WIDTH + GAP, top: startY + IMG_HEIGHT + GAP },
+      { left: startX, top: startY },                         // 좌상
+      { left: startX + IMG_WIDTH + GAP, top: startY },       // 우상
+      { left: startX, top: startY + IMG_HEIGHT + GAP },      // 좌하
+      { left: startX + IMG_WIDTH + GAP, top: startY + IMG_HEIGHT + GAP }, // 우하
     ],
   },
+  // [4컷 수직 모드]
   vertical: {
     canvasWidth: PADDING * 2 + IMG_WIDTH,
+    // 세로로 길게: 높이 * 4 + 간격 * 3
     canvasHeight: PADDING * 2 + HEADER_HEIGHT + IMG_HEIGHT * 4 + GAP * 3,
     positions: [
       { left: startX, top: startY },
@@ -35,7 +45,9 @@ export const LAYOUTS = {
   },
 };
 
-// 테마 목록
+// ==========================================
+// 3. 테마 색상 팔레트
+// ==========================================
 export const THEMES = [
   { name: '🖤 시크 블랙', bg: '#1a1a1a', text: '#ffffff' },
   { name: '🤍 심플 화이트', bg: '#f0f0f0', text: '#1a1a1a' },
@@ -44,20 +56,18 @@ export const THEMES = [
   { name: '💙 쿨 블루', bg: '#e0f2fe', text: '#0284c7' },
 ];
 
-// [업그레이드된 화풍 스타일 레시피]
+// ==========================================
+// 4. Fabric.js 이미지 필터 레시피 (핵심!)
+// ==========================================
 export const STYLE_FILTERS = [
-  // [New] ✨ 스케치북 (빈 화면) 스타일 추가 ✨
   { 
     id: 'sketchbook',
     name: '📒 스케치북 (빈 화면)',
-    // bgColor 매개변수 추가 (현재 테마 색상을 받아옴)
+    // Tip: 사용자가 선택한 배경색(bgColor)으로 이미지를 덮어쓰는 로직
     apply: (img: fabric.Image, bgColor?: string) => {
-      // 배경색이 없으면 기본 흰색 사용
       const colorToUse = bgColor || '#ffffff';
-
       img.filters = [
-         // BlendColor 필터를 'tint' 모드, 투명도 1.0으로 설정하면
-         // 이미지가 해당 색상으로 완전히 덮입니다.
+         // BlendColor: 이미지를 색상으로 덮음 (Tint 모드, Alpha 1.0 = 완전 불투명)
          new fabric.Image.filters.BlendColor({
             color: colorToUse,
             mode: 'tint',
@@ -70,20 +80,19 @@ export const STYLE_FILTERS = [
     id: 'sketch', 
     name: '✏️ 스케치', 
     apply: (img: fabric.Image) => {
-      // [개선됨] 더 진하고 연필 그림 같은 느낌
+      // 스케치 효과: 흑백 -> 윤곽선 검출 -> 색상 반전의 과정
       img.filters = [
-        new fabric.Image.filters.Grayscale(), // 1. 흑백으로 변환
-        // 2. 대비를 강하게 줘서 윤곽선을 뚜렷하게 만듦
-        new fabric.Image.filters.Contrast({ contrast: 0.4 }), 
-        // 3. 강력한 엣지 검출 필터 적용
+        new fabric.Image.filters.Grayscale(), // 1. 색상 정보 제거
+        new fabric.Image.filters.Contrast({ contrast: 0.4 }), // 2. 명암 대비 강조
+        // 3. Convolute: 엣지 검출(Edge Detection) 매트릭스
+        // 중앙값(8)과 주변값(-1)의 차이를 계산해 경계선을 찾음
         new fabric.Image.filters.Convolute({
            matrix: [ -1, -1, -1,
                      -1,  8, -1,
                      -1, -1, -1 ]
         }),
-        // 4. 잡티를 없애고 배경을 하얗게 날림
-        new fabric.Image.filters.Brightness({ brightness: 0.2 }), 
-        new fabric.Image.filters.Invert() // 5. 색상 반전 (검은 선, 흰 배경)
+        new fabric.Image.filters.Brightness({ brightness: 0.2 }), // 4. 배경 정리
+        new fabric.Image.filters.Invert() // 5. 검은 배경/흰 선 -> 흰 배경/검은 선으로 반전
       ];
     }
   },
