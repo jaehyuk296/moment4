@@ -34,37 +34,46 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
   const loadedImagesRef = useRef<(EnhancedFabricImage | null)[]>([null, null, null, null]);
   const titleObjectRef = useRef<fabric.Text | null>(null);
 
-  const handleAddText = ({ text, color, font }: { text: string, color: string, font: string }) => {
+  const handleAddText = ({ text, color, font, isNeon }: { text: string, color: string, font: string, isNeon: boolean }) => {
     if (!fabricCanvas.current || !text.trim()) return;
 
-    // Fabric의 IText(Interactive Text) 객체 생성
-    // IText는 사용자가 더블 클릭해서 내용을 수정할 수도 있습니다.
+    // 네온 효과 설정 (isNeon이 참일 때만 그림자 객체 생성)
+    const shadowEffect = isNeon 
+      ? new fabric.Shadow({
+          color: color,    // 글자색과 같은 색으로 빛나게 함
+          blur: 20,        // 번짐 정도 (클수록 몽환적)
+          offsetX: 0,
+          offsetY: 0
+        })
+      : new fabric.Shadow({ // 기본 그림자 (약하게)
+          color: 'rgba(0,0,0,0.3)',
+          blur: 5,
+          offsetX: 2,
+          offsetY: 2
+      });
+
     const textTextbox = new fabric.IText(text, {
-      left: IMG_WIDTH / 2, // 대략 중앙 쯤에 배치
+      left: IMG_WIDTH / 2,
       top: IMG_HEIGHT / 2,
-      fontFamily: font || 'Pretendard, sans-serif', // 기본 폰트 (프로젝트에 적용된 폰트 사용)
-      fill: color || '#000000',     // 기본 글자색 (검정)
-      fontSize: 40,        // 기본 글자 크기
-      fontWeight: 'bold',  // 약간 두껍게
-      // 그림자 효과로 가독성 높이기 (선택 사항)
-      shadow: new fabric.Shadow({
-        color: 'rgba(0,0,0,0.3)',
-        blur: 5,
-        offsetX: 2,
-        offsetY: 2
-      }),
-      // 객체 조작 제어판 설정 (기존 스티커와 동일하게)
+      fontFamily: font || 'Pretendard, sans-serif',
+      
+      // 👇 네온일 때는 글자색을 약간 밝게(흰색 섞임) 주면 더 네온 같음
+      //    하지만 복잡하니까 일단 입력받은 color 그대로 사용
+      fill: color || '#000000',     
+      
+      fontSize: 50,         // 귀여운 폰트는 좀 커야 예쁨
+      fontWeight: 'bold',
+      
+      shadow: shadowEffect, // 👈 여기서 그림자(네온) 적용!
+      
       borderColor: '#2563eb',
       cornerColor: '#2563eb',
       cornerSize: 12,
       transparentCorners: false,
     });
 
-    // 캔버스에 추가
     fabricCanvas.current.add(textTextbox);
-    // 추가된 텍스트를 바로 선택 상태로 만듦 (바로 이동 가능하게)
     fabricCanvas.current.setActiveObject(textTextbox);
-    // 캔버스 다시 그리기
     fabricCanvas.current.requestRenderAll();
   };
 
