@@ -44,6 +44,104 @@ export const THEMES = [
   { name: '💙 쿨 블루', bg: '#e0f2fe', text: '#0284c7' },
 ];
 
+// [업그레이드된 화풍 스타일 레시피]
+export const STYLE_FILTERS = [
+  // [New] ✨ 스케치북 (빈 화면) 스타일 추가 ✨
+  { 
+    id: 'sketchbook',
+    name: '📒 스케치북 (빈 화면)',
+    // bgColor 매개변수 추가 (현재 테마 색상을 받아옴)
+    apply: (img: fabric.Image, bgColor?: string) => {
+      // 배경색이 없으면 기본 흰색 사용
+      const colorToUse = bgColor || '#ffffff';
+
+      img.filters = [
+         // BlendColor 필터를 'tint' 모드, 투명도 1.0으로 설정하면
+         // 이미지가 해당 색상으로 완전히 덮입니다.
+         new fabric.Image.filters.BlendColor({
+            color: colorToUse,
+            mode: 'tint',
+            alpha: 1.0 
+         })
+      ];
+    }
+  },
+  { 
+    id: 'sketch', 
+    name: '✏️ 스케치', 
+    apply: (img: fabric.Image) => {
+      // [개선됨] 더 진하고 연필 그림 같은 느낌
+      img.filters = [
+        new fabric.Image.filters.Grayscale(), // 1. 흑백으로 변환
+        // 2. 대비를 강하게 줘서 윤곽선을 뚜렷하게 만듦
+        new fabric.Image.filters.Contrast({ contrast: 0.4 }), 
+        // 3. 강력한 엣지 검출 필터 적용
+        new fabric.Image.filters.Convolute({
+           matrix: [ -1, -1, -1,
+                     -1,  8, -1,
+                     -1, -1, -1 ]
+        }),
+        // 4. 잡티를 없애고 배경을 하얗게 날림
+        new fabric.Image.filters.Brightness({ brightness: 0.2 }), 
+        new fabric.Image.filters.Invert() // 5. 색상 반전 (검은 선, 흰 배경)
+      ];
+    }
+  },
+  { 
+    id: 'noir', // [새로 추가] 분위기 있는 흑백 영화 느낌
+    name: '🎞️ 느와르',
+    apply: (img: fabric.Image) => {
+      img.filters = [
+        new fabric.Image.filters.Grayscale(), // 1. 기본 흑백
+        // 2. 대비를 아주 강하게 줘서 그림자를 깊게 만듦 (드라마틱한 효과)
+        new fabric.Image.filters.Contrast({ contrast: 0.3 }), 
+        // 3. 밝기를 살짝 낮춰서 묵직한 분위기 연출
+        new fabric.Image.filters.Brightness({ brightness: -0.1 })
+      ];
+    }
+  },
+  { 
+    id: 'vintage', 
+    name: '📼 레트로', 
+    apply: (img: fabric.Image) => {
+      // [개선됨] 더 바랜듯한 옛날 사진 느낌
+      img.filters = [
+        new fabric.Image.filters.Sepia(), // 1. 세피아톤 베이스
+        // 2. 노이즈를 추가해 거친 질감 표현
+        new fabric.Image.filters.Noise({ noise: 50 }), 
+        // 3. 대비를 낮추고 밝기를 올려서 빛 바랜 느낌
+        new fabric.Image.filters.Contrast({ contrast: -0.15 }),
+        new fabric.Image.filters.Brightness({ brightness: 0.1 })
+      ];
+    }
+  },
+  { 
+    id: 'cartoon', 
+    name: '🎨 만화', 
+    apply: (img: fabric.Image) => {
+      // 기존 유지 (색감 쨍하고 선명하게)
+      img.filters = [
+        new fabric.Image.filters.Convolute({
+          matrix: [ 0, -1, 0, -1, 5, -1, 0, -1, 0 ]
+        }),
+        new fabric.Image.filters.Saturation({ saturation: 0.7 }),
+        new fabric.Image.filters.Contrast({ contrast: 0.15 })
+      ];
+    }
+  },
+  { 
+    id: 'pixel', 
+    name: '👾 픽셀', 
+    apply: (img: fabric.Image) => {
+      // 기존 유지 (8비트 모자이크)
+      img.filters = [
+        new fabric.Image.filters.Pixelate({ blocksize: 8 }),
+        new fabric.Image.filters.Saturation({ saturation: 0.5 })
+      ];
+    }
+  }
+];
+
 // 스티커 목록
 export const STICKER_LIST = [
   "/stickers/panda.png",
