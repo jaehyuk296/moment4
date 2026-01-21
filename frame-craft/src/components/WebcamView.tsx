@@ -1,4 +1,4 @@
-"use client";
+"use client";// 브라우저에서 동작하는 컴포넌트임을 명시
 
 import { useRef, useEffect, useState, useCallback } from "react";
 
@@ -7,6 +7,7 @@ import NeonDecorations from "./webcam/NeonDecorations";
 import Viewfinder from "./webcam/Viewfinder";
 import PhotoStrip from "./webcam/PhotoStrip";
 import ControlBar from "./webcam/ControlBar";
+
 interface WebcamViewProps {
   onFinish: (photos: string[]) => void;
 }
@@ -28,17 +29,28 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
   // =========================================================
   // [초기화] 컴포넌트 마운트 시 웹캠 권한 요청 및 스트림 연결
   // =========================================================
-  useEffect(() => {
+  useEffect(() => { // 비동기 처리. 최초 마운트(생성) 시 1회 실행
+    let currentStream: MediaStream | null = null;
     // navigator.mediaDevices: 최신 브라우저의 미디어 장치 접근 API
-    navigator.mediaDevices.getUserMedia({ 
+    navigator.mediaDevices.getUserMedia({ // 브라우저는 보안 땜에 하드웨어 접근 x -> 권한 요청 필요
       video: { facingMode: "user" }, // 전면 카메라(셀카 모드) 우선
-      audio: false // 오디오는 불필요하므로 끔 (하울링 방지)
+      audio: false // 오디오는 불필요하므로 끔
     })
       .then((stream) => { 
+        currentStream = stream;
         // 비디오 태그에 스트림 연결 -> 자동 재생됨
         if (videoRef.current) videoRef.current.srcObject = stream; 
       })
       .catch((err) => console.error("Camera Error:", err));
+      
+    return () => {
+      // 컴포넌트가 사라질 때(Unmount) 리액트가 이 함수를 실행함
+      if (currentStream) {
+        // 변수에 저장해둔 스트림을 꺼내서 트랙을 정지시킴
+        currentStream.getTracks().forEach(track => track.stop());
+        console.log("카메라가 안전하게 꺼졌습니다.");
+      }
+    };
   }, []);
 
   // =========================================================
@@ -48,7 +60,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
   const captureOne = useCallback(() => {
     if (!videoRef.current) return;
     
-    // 1. 메모리 상에 가상의 캔버스 생성
+    // 1. 메모리 상에 가상의 캔버스 생성, RAM 상에만 존재
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
@@ -106,15 +118,15 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
       {/* 1. 배경 데코 */}
       <NeonDecorations />
 
-      {/* 2. 타이틀 */}
+      {/* 2. 타이틀 */} {/* 마스킹 기법 글자에 그라디언트 적용 */}
       <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 mb-8 tracking-widest drop-shadow-sm z-10">
-        MOMENT4
+        MOMENT4 
       </h1>
     
       {/* 3. 메인 콘텐츠 (뷰파인더) */}
       <div className="relative flex items-center justify-center">
         <Viewfinder 
-          videoRef={videoRef}
+          videoRef={videoRef} // 중괄호({})는 메모리에 있는 변수의 값을 넘길 때 씀.
           isMirrored={isMirrored}
           isGridOn={isGridOn}
           count={count}
