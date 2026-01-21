@@ -7,7 +7,6 @@ interface SideToolsProps {
 
 export default function SideTools({ isGridOn, setIsGridOn, isMirrored, setIsMirrored }: SideToolsProps) {
   return (
-    // [수정] absolute 제거, 가로 정렬(flex-row)로 변경, 버튼 크기 약간 조정(w-12)
     <div className="flex flex-row gap-4 z-20">
       <button
         onClick={() => setIsGridOn(!isGridOn)}
