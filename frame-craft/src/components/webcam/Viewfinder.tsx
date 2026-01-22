@@ -19,7 +19,7 @@ export default function Viewfinder({ videoRef, isMirrored, isGridOn, count, isFl
       <video 
         ref={videoRef as RefObject<HTMLVideoElement>} 
         autoPlay 
-        playsInline 
+        playsInline // 모바일에서 전체화면 방지
         // CSS transform으로 좌우 반전 처리 (거울 모드)
         className={`w-full ${isMirrored ? "transform -scale-x-100" : ""}`} 
       />
@@ -31,11 +31,10 @@ export default function Viewfinder({ videoRef, isMirrored, isGridOn, count, isFl
           <div className="border-r border-b border-white/30"></div>
           <div className="border-r border-b border-white/30"></div>
           <div className="border-b border-white/30"></div>
-          {/* ... 반복되는 그리드 셀들 ... */}
         </div>
       )}
 
-      {/* 3. 카운트다운 오버레이 (숫자가 있을 때만 표시) */}
+      {/* 3. 카운트다운 오버레이 (숫자가 있을 때만 표시) 딤드(Dimmed) 처리 */}
       {count !== null && count > 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-9xl font-bold animate-pulse">
           {count}

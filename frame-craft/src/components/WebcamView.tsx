@@ -16,6 +16,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
   // video 엘리먼트에 직접 접근하기 위해 useRef 사용 (DOM 조작 최소화)
   const videoRef = useRef<HTMLVideoElement>(null);
   
+  // useState 함수는 내부적으로 무조건 길이가 2인 배열을 반환 => [상태값, 상태값 갱신 함수]
   // 촬영된 사진 데이터(Base64 문자열)를 배열로 관리
   const [photos, setPhotos] = useState<string[]>([]);
   
@@ -74,7 +75,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
     }
     
     // 3. 현재 비디오 프레임을 캔버스에 그림
-    ctx?.drawImage(videoRef.current, 0, 0);
+    ctx?.drawImage(videoRef.current, 0, 0); // 변수(ctx)가 null이면, 실행을 멈추고 넘어가라
     
     // 4. 이미지 데이터 추출 (PNG 포맷)
     const photoData = canvas.toDataURL("image/png");
@@ -84,7 +85,7 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
     setTimeout(() => setIsFlashing(false), 200); // 0.2초 뒤 플래시 끔
     setPhotos((prev) => [...prev, photoData]);
     setCount(null); // 카운트다운 초기화
-  }, [isMirrored]); // isMirrored가 바뀔 때만 함수 재생성
+  }, [isMirrored]); // isMirrored가 바뀔 때만 함수 재생성 + 마운트 될 때 1회 생성
 
   // =========================================================
   // [로직] 카운트다운 타이머
@@ -109,8 +110,9 @@ export default function WebcamView({ onFinish }: WebcamViewProps) {
   };
 
   const deletePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index)); // filter = 새로운 배열을 생성
   };
+// 안 쓸 거야라는 의미로 언더스코어(_)를 쓰는 것
 
   return (
     <div className="relative flex flex-col items-center justify-center w-full h-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-purple-900 to-violet-950 p-4 overflow-hidden">
