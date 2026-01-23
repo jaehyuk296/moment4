@@ -7,15 +7,15 @@ import BottomToolbar from "./editor/BottomToolbar";
 import StickerSidebar from "./editor/StickerSidebar";
 import { THEMES } from "./editor/constants";
 import { PhotoEditorProps } from "./editor/types";
-import usePhotoEditor from "@/hooks/usePhotoEditor"; // 위에서 만든 훅 경로에 맞게 수정
+import usePhotoEditor from "@/hooks/usePhotoEditor"; 
 
 export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
-  // UI 상태 관리 (레이아웃, 테마, 스티커바)
+  // UI 상태 관리
   const [layoutMode, setLayoutMode] = useState<'grid' | 'vertical'>('grid');
   const [themeIndex, setThemeIndex] = useState(0);
   const [isStickerBarOpen, setIsStickerBarOpen] = useState(true);
 
-  // 커스텀 훅 사용 (Fabric 로직은 모두 여기서 처리)
+  // 커스텀 훅 사용
   const {
     canvasEl,
     loading,
@@ -23,7 +23,8 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
     addSticker,
     handleRemoveBg,
     handleApplyStyle,
-    handleDownload
+    handleDownload,
+    handleMirror // 👈 [중요] 여기서 꺼내와야 쓸 수 있어!
   } = usePhotoEditor({ photos, layoutMode, themeIndex });
 
   return (
@@ -55,11 +56,12 @@ export default function PhotoEditor({ photos, onBack }: PhotoEditorProps) {
         </div>
 
         {/* 하단 툴바 */}
-        <BottomToolbar 
-          onBack={onBack}
+        <BottomToolbar
+          onBack={onBack} // 👈 'resetPhotos' 대신 props로 받은 'onBack' 사용
           onRemoveBg={handleRemoveBg}
           onDownload={handleDownload}
-          onApplyStyle={handleApplyStyle} 
+          onApplyStyle={handleApplyStyle}
+          onMirror={handleMirror} // 👈 훅에서 꺼낸 함수 전달 완료!
           loading={loading}
         />
       </div>

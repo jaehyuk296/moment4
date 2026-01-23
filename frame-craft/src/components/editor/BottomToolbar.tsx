@@ -5,11 +5,20 @@ interface BottomToolbarProps {
   onBack: () => void;
   onRemoveBg: () => void;
   onDownload: () => void;
-  onApplyStyle: (styleId: string) => void; // 함수 이름 변경
+  onApplyStyle: (styleId: string) => void;
+  onMirror: () => void; // ✅ [New] 거울모드 함수 타입 추가
   loading: boolean;
 }
 
-export default function BottomToolbar({ onBack, onRemoveBg, onDownload, onApplyStyle, loading }: BottomToolbarProps) {
+export default function BottomToolbar({ 
+  onBack, 
+  onRemoveBg, 
+  onDownload, 
+  onApplyStyle, 
+  onMirror, // ✅ [New] props로 받아옴
+  loading 
+}: BottomToolbarProps) {
+  
   // 스타일 메뉴 열림 상태
   const [showStyleMenu, setShowStyleMenu] = useState(false);
 
@@ -44,6 +53,15 @@ export default function BottomToolbar({ onBack, onRemoveBg, onDownload, onApplyS
           className="px-6 py-3 bg-gray-700 text-white rounded-full font-bold hover:bg-gray-600 transition flex items-center gap-2"
         >
           ↩️ 다시 찍기
+        </button>
+
+        {/* ✅ [New] 거울모드 버튼 추가 */}
+        <button 
+          onClick={onMirror} 
+          className="px-6 py-3 bg-teal-500 text-white rounded-full font-bold hover:bg-teal-600 transition shadow-lg flex items-center gap-2"
+          disabled={loading}
+        >
+          🪞 거울모드
         </button>
 
         <button 

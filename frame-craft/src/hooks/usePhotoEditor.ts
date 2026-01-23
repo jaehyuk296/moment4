@@ -138,6 +138,23 @@ export default function usePhotoEditor({ photos, layoutMode, themeIndex }: UsePh
     };
   }, []);
 
+  // ✅ [추가] 선택한 객체 좌우 반전 (거울 모드) 함수
+  const handleMirror = () => {
+    const activeObj = fabricCanvas.current?.getActiveObject();
+    
+    // 선택된 게 없으면 무시
+    if (!activeObj) {
+        alert("반전시킬 사진이나 스티커를 선택해주세요!");
+        return;
+    }
+
+    // 현재 flipX 값을 반대로 토글 (true -> false, false -> true)
+    activeObj.set('flipX', !activeObj.flipX);
+    
+    // 화면 갱신
+    fabricCanvas.current?.renderAll();
+  };
+
   // ==========================================
   // [2] 레이아웃/테마 변경 감지 및 이미지 업데이트
   // ==========================================
@@ -369,6 +386,7 @@ export default function usePhotoEditor({ photos, layoutMode, themeIndex }: UsePh
     addSticker,
     handleRemoveBg,
     handleApplyStyle,
-    handleDownload
+    handleDownload,
+    handleMirror,
   };
 }
