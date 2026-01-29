@@ -155,6 +155,14 @@ export const STYLE_FILTERS = [
 export const STICKER_LIST = [
   "/stickers/panda.png",
   "/stickers/kitty.png",
+  "/stickers/beam.png",
+  "/stickers/heyho.png",
+  "/stickers/kubby.png",
+  "/stickers/heart.png",
+  "/stickers/flower.png",
+  "/stickers/rainbow.png",
+  "/stickers/teddybear.png",
+
   // 추가 스티커 경로...
 ];
 
