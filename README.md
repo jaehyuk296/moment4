@@ -8,6 +8,15 @@ Next.js와 Canvas API, 그리고 AI 배경 제거 기술을 활용하여 별도�
 
 <br>
 
+## 스크린샷
+- 메인 화면
+<img width="1919" height="889" alt="image" src="https://github.com/user-attachments/assets/7d7b5893-c6b2-4335-b4a6-eb4749df1863" />
+
+- 편집 화면
+<img width="1915" height="917" alt="image" src="https://github.com/user-attachments/assets/e79bf09a-cacd-4206-ac6b-6b828a6c66b1" />
+
+<br>
+
 ## ✨ 주요 기능 (Key Features)
 
 - **📸 실시간 웹캠 촬영**: 브라우저 권한을 이용하여 총 4장의 사진을 연속으로 촬영합니다.
