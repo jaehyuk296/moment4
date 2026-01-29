@@ -1,0 +1,35 @@
+interface SideToolsProps {
+  isGridOn: boolean;
+  setIsGridOn: (v: boolean) => void;
+  isMirrored: boolean;
+  setIsMirrored: (v: boolean) => void;
+}
+
+export default function SideTools({ isGridOn, setIsGridOn, isMirrored, setIsMirrored }: SideToolsProps) {
+  return (
+    <div className="flex flex-row gap-4 z-20">
+      <button
+        onClick={() => setIsGridOn(!isGridOn)}
+        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 transition backdrop-blur-md ${
+          isGridOn 
+            ? "bg-pink-500/80 border-pink-500 text-white shadow-[0_0_10px_rgba(236,72,153,0.5)]" 
+            : "bg-white/5 border-pink-500 text-white/70 hover:bg-pink-500/10 hover:text-white hover:border-pink-500"
+        }`}
+        title="3x3 그리드"
+      >
+        📐
+      </button>
+      <button
+        onClick={() => setIsMirrored(!isMirrored)}
+        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 transition backdrop-blur-md ${
+          !isMirrored 
+            ? "bg-purple-500/80 border-purple-400 text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]" 
+            : "bg-white/5 border-purple-400 text-white/70 hover:bg-purple-400/20 hover:text-white hover:border-purple-400"
+        }`}
+        title="좌우 반전"
+      >
+        ↔️   
+      </button>
+    </div>
+  );
+}

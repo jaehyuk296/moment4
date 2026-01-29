@@ -1,77 +1,161 @@
-// src/components/WebcamView.tsx
-"use client"; // 브라우저 API(카메라)를 쓰려면 필수!
+"use client";// 브라우저에서 동작하는 컴포넌트임을 명시
 
-import { useEffect, useRef, useState } from "react";
-import { Camera, AlertCircle } from "lucide-react";
+import { useRef, useEffect, useState, useCallback } from "react";
 
-export default function WebcamView() {
+// 분리한 컴포넌트 불러오기
+import NeonDecorations from "./webcam/NeonDecorations";
+import Viewfinder from "./webcam/Viewfinder";
+import PhotoStrip from "./webcam/PhotoStrip";
+import ControlBar from "./webcam/ControlBar";
+
+interface WebcamViewProps {
+  onFinish: (photos: string[]) => void;
+}
+
+export default function WebcamView({ onFinish }: WebcamViewProps) {
+  // video 엘리먼트에 직접 접근하기 위해 useRef 사용 (DOM 조작 최소화)
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(true);
+  
+  // 촬영된 사진 데이터(Base64 문자열)를 배열로 관리
+  const [photos, setPhotos] = useState<string[]>([]);
+  
+  // UI 상태 관리
+  const [count, setCount] = useState<number | null>(null); // 카운트다운 (3, 2, 1...)
+  const [isTimerOn, setIsTimerOn] = useState(false);       // 타이머 모드 활성화 여부
+  const [isFlashing, setIsFlashing] = useState(false);     // 촬영 순간 플래시 효과
+  const [isGridOn, setIsGridOn] = useState(false);         // 그리드 토글
+  const [isMirrored, setIsMirrored] = useState(true);      // 거울 모드 토글
 
-  useEffect(() => {
-    let stream: MediaStream | null = null;
-
-    const startCamera = async () => {
-      try {
-        // 1. 카메라 권한 요청 및 스트림 가져오기
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 }, // HD 화질 선호
-            height: { ideal: 720 },
-            facingMode: "user", // 전면 카메라 (셀카 모드)
-          },
-          audio: false, // 소리는 필요 없음
-        });
-
-        // 2. 비디오 태그에 스트림 연결
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error("카메라 접근 오류:", err);
-        setError("카메라 권한을 허용해주세요! 📷");
-        setLoading(false);
-      }
-    };
-
-    startCamera();
-
-    // 3. cleanup: 컴포넌트가 꺼질 때 카메라 끄기 (중요!)
+  // =========================================================
+  // [초기화] 컴포넌트 마운트 시 웹캠 권한 요청 및 스트림 연결
+  // =========================================================
+  useEffect(() => { // 비동기 처리. 최초 마운트(생성) 시 1회 실행
+    let currentStream: MediaStream | null = null;
+    // navigator.mediaDevices: 최신 브라우저의 미디어 장치 접근 API
+    navigator.mediaDevices.getUserMedia({ // 브라우저는 보안 땜에 하드웨어 접근 x -> 권한 요청 필요
+      video: { facingMode: "user" }, // 전면 카메라(셀카 모드) 우선
+      audio: false // 오디오는 불필요하므로 끔
+    })
+      .then((stream) => { 
+        currentStream = stream;
+        // 비디오 태그에 스트림 연결 -> 자동 재생됨
+        if (videoRef.current) videoRef.current.srcObject = stream; 
+      })
+      .catch((err) => console.error("Camera Error:", err));
+      
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      // 컴포넌트가 사라질 때(Unmount) 리액트가 이 함수를 실행함
+      if (currentStream) {
+        // 변수에 저장해둔 스트림을 꺼내서 트랙을 정지시킴
+        currentStream.getTracks().forEach(track => track.stop());
+        console.log("카메라가 안전하게 꺼졌습니다.");
       }
     };
   }, []);
 
+  // =========================================================
+  // [핵심] 사진 캡처 함수 (메모이제이션 적용)
+  // useCallback을 써야 useEffect 의존성 배열에서 불필요한 재실행을 막음
+  // =========================================================
+  const captureOne = useCallback(() => {
+    if (!videoRef.current) return;
+    
+    // 1. 메모리 상에 가상의 캔버스 생성, RAM 상에만 존재
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext("2d");
+    
+    // 2. 거울 모드(좌우 반전) 처리
+    // 사용자가 보는 화면과 저장되는 사진이 같아야 함 (WYSIWYG)
+    if (isMirrored) {
+      ctx?.translate(canvas.width, 0); // 좌표축을 오른쪽 끝으로 이동
+      ctx?.scale(-1, 1);               // x축을 뒤집음
+    }
+    
+    // 3. 현재 비디오 프레임을 캔버스에 그림
+    ctx?.drawImage(videoRef.current, 0, 0);
+    
+    // 4. 이미지 데이터 추출 (PNG 포맷)
+    const photoData = canvas.toDataURL("image/png");
+    
+    // 5. UX: 플래시 효과 및 데이터 저장
+    setIsFlashing(true);
+    setTimeout(() => setIsFlashing(false), 200); // 0.2초 뒤 플래시 끔
+    setPhotos((prev) => [...prev, photoData]);
+    setCount(null); // 카운트다운 초기화
+  }, [isMirrored]); // isMirrored가 바뀔 때만 함수 재생성
+
+  // =========================================================
+  // [로직] 카운트다운 타이머
+  // =========================================================
+  useEffect(() => {
+    if (count === null) return;
+    if (count > 0) {
+      // 1초마다 count 감소
+      const timer = setTimeout(() => setCount(count - 1), 1000);
+      return () => clearTimeout(timer); // 클린업: 컴포넌트 언마운트 시 타이머 제거
+    } else if (count === 0) {
+      // 0이 되면 촬영 실행
+      captureOne();
+    }
+  }, [count, captureOne]);
+
+  // 셔터 버튼 핸들러
+  const handleShutter = () => {
+    if (photos.length >= 4) return; // 4장 제한
+    if (isTimerOn) setCount(3);     // 타이머 모드면 3초 시작
+    else captureOne();              // 아니면 즉시 촬영
+  };
+
+  const deletePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
-    <div className="relative w-full max-w-2xl aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-gray-800">
-      {/* 로딩 상태 */}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center text-white">
-          <Camera className="w-12 h-12 animate-bounce opacity-50" />
-        </div>
-      )}
+    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-purple-900 to-violet-950 p-4 overflow-hidden">
+      
+      {/* 1. 배경 데코 */}
+      <NeonDecorations />
 
-      {/* 에러 메시지 */}
-      {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-red-400 z-10">
-          <AlertCircle className="w-10 h-10 mb-2" />
-          <p className="font-bold">{error}</p>
-        </div>
-      )}
+      {/* 2. 타이틀 */} {/* 마스킹 기법 글자에 그라디언트 적용 */}
+      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 mb-8 tracking-widest drop-shadow-sm z-10">
+        MOMENT4 
+      </h1>
+    
+      {/* 3. 메인 콘텐츠 (뷰파인더) */}
+      <div className="relative flex items-center justify-center">
+        <Viewfinder 
+          videoRef={videoRef} // 중괄호({})는 메모리에 있는 변수의 값을 넘길 때 씀.
+          isMirrored={isMirrored}
+          isGridOn={isGridOn}
+          count={count}
+          isFlashing={isFlashing}
+          isComplete={photos.length === 4}
+        />
+      </div>
 
-      {/* 실제 비디오 화면 */}
-      {/* playsInline: 모바일에서 전체화면 방지, muted: 하울링 방지, autoPlay: 자동 재생 */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover transform scale-x-[-1]" // 거울 모드(좌우 반전)
-      />
+      {/* 4. 하단 영역 (사진 리스트 + 컨트롤 바) */}
+      <div className="w-full max-w-[640px] mt-8 flex flex-col gap-6 z-10">
+        <PhotoStrip 
+          photos={photos} 
+          onDelete={deletePhoto} 
+        />
+        
+        <ControlBar 
+          isComplete={photos.length === 4}
+          isTimerOn={isTimerOn}
+          setIsTimerOn={setIsTimerOn}
+          onShutter={handleShutter}
+          onFinish={() => onFinish(photos)}
+          isCountActive={count !== null}
+          // 사이드 툴 Props 전달
+          isGridOn={isGridOn}
+          setIsGridOn={setIsGridOn}
+          isMirrored={isMirrored}
+          setIsMirrored={setIsMirrored}
+        />
+      </div>
     </div>
   );
 }

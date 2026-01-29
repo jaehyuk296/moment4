@@ -1,28 +1,32 @@
-// src/app/page.tsx
+"use client";
+
+import { useState } from "react";
 import WebcamView from "@/components/WebcamView";
+import PhotoEditor from "@/components/PhotoEditor";
 
 export default function Home() {
+  // [상태 관리] 찍은 사진 데이터의 저장소
+  // 하위 컴포넌트들이 이 데이터를 공유받아 사용함
+  const [photos, setPhotos] = useState<string[]>([]);
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex flex-col items-center justify-center p-4">
-      {/* 헤더 섹션 */}
-      <div className="text-center mb-8 space-y-2">
-        <h1 className="text-4xl md:text-6xl font-extrabold text-white drop-shadow-md tracking-tight">
-          Frame Craft 📸
-        </h1>
-        <p className="text-white/80 text-lg font-medium">
-          나만의 인생네컷을 만들어보세요!
-        </p>
-      </div>
-
-      {/* 웹캠 화면 섹션 */}
-      <WebcamView />
-
-      {/* 하단 버튼 (아직 기능 없음) */}
-      <div className="mt-8 flex gap-4">
-        <button className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
-          촬영하기 ✨
-        </button>
-      </div>
+    <main>
+      {/* [조건부 렌더링] 
+        사진이 4장 미만이면 촬영 모드, 
+        4장이 꽉 차면 편집 모드로 전환 
+      */}
+      {photos.length < 4 ? (
+        <WebcamView 
+          // onFinish: 촬영이 끝나면 photos 상태를 업데이트하는 콜백 함수 전달
+          onFinish={(takenPhotos) => setPhotos(takenPhotos)} 
+        />
+      ) : (
+        <PhotoEditor 
+          photos={photos} 
+          // onBack: 다시 찍기 버튼을 누르면 photos를 비워 촬영 모드로 복귀
+          onBack={() => setPhotos([])} 
+        />
+      )}
     </main>
   );
 }
